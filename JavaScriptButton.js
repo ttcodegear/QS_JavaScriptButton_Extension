@@ -57,9 +57,17 @@ define(["jquery", "qlik"], function($, qlik) {
 					label: "JavaScript Properties",
 				  type : "items",
 					items: {
+						ClearHTML: {
+							ref: "ClearHTML",
+							label: "Always Clear HTML",
+							desc:"Always clear $element.html in paint fuction",
+							type: "boolean",
+							defaultValue: true
+						},
 						HtmlBody : {
 							ref: "HtmlBody",
 							label: "HtmlBody",
+							desc:"HtmlBody",
 							type: "string",
 							expression: "optional",
 							defaultValue: "='<button style=\"width:100%\" id=\"abcdefg\">&lt;Action&gt;</button>'"
@@ -78,7 +86,7 @@ define(["jquery", "qlik"], function($, qlik) {
 							desc:"JavaScriptAction",
 							type: "string",
 							expression: "optional",
-							defaultValue: "='\nvar self = arguments[0];\nvar qlik = arguments[1];\nvar $element = arguments[2];\nvar layout = arguments[3];\nvar $ = arguments[4];\n//var app = qlik.currApp();\n//var rows = self.backendApi.getRowCount();\n$element.find(\"#abcdefg\").on(\"qv-activate\", function() {\n\tvar x = \"Qlik\";\n\talert(myEcho(x));\n});\nreturn new qlik.Promise(function (resolve, reject) {\n\tresolve();\n});\n'"
+							defaultValue: "='\nvar self = arguments[0];\nvar qlik = arguments[1];\nvar $element = arguments[2];\nvar layout = arguments[3];\nvar $ = arguments[4];\n//var app = qlik.currApp();\n//var rows = self.backendApi.getRowCount();\n$element.find(\"#abcdefg\").off(\"qv-activate\").on(\"qv-activate\", function() {\n\tvar x = \"Qlik\";\n\talert(myEcho(x));\n});\nreturn new qlik.Promise(function (resolve, reject) {\n\tresolve();\n});\n'"
 						}
 					}
 				}
@@ -93,7 +101,10 @@ define(["jquery", "qlik"], function($, qlik) {
 			var self = this;
 			var html = layout.HtmlBody;
 			html += '<script>'+layout.JavaScriptBody+'</script>';
-			$element.html(html);
+			var id = "JavaScriptButton_" + layout.qInfo.qId;
+			if(qlik.navigation.getMode() == qlik.navigation.EDIT || layout.ClearHTML || document.getElementById(id) == null) {
+				$element.html('<div id="' + id + '">' + html + '</div>');
+			}
 			var func = new Function(layout.JavaScriptAction);
 			return func.call(null, self, qlik, $element, layout, $);
 		}
